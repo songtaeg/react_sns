@@ -1,141 +1,183 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Grid2,
-  AppBar,
-  Toolbar,
-  Typography,
-  Container,
-  Box,
-  Card,
-  CardMedia,
-  CardContent,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  IconButton,
-  DialogActions,
-  Button,
-  TextField,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Avatar,
+  AppBar, Toolbar, Typography, Container, Box, Card, CardMedia, CardContent,
+  Dialog, DialogTitle, DialogContent, IconButton,
+  DialogActions, Button, TextField,
+  List, ListItem, ListItemText, ListItemAvatar,
+  Avatar, ListItemSecondaryAction,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
+import axios from 'axios';
 
-const mockFeeds = [
-  {
-    id: 1,
-    title: '게시물 1',
-    description: '이것은 게시물 1의 설명입니다.',
-    image: 'https://images.unsplash.com/photo-1551963831-b3b1ca40c98e',
-  },
-  {
-    id: 2,
-    title: '게시물 2',
-    description: '이것은 게시물 2의 설명입니다.',
-    image: 'https://images.unsplash.com/photo-1521747116042-5a810fda9664',
-  },
-  // 추가 피드 데이터
-];
-
-function Feed() {
+function Feed({ currentUser, onLogout }) {
   const [open, setOpen] = useState(false);
   const [selectedFeed, setSelectedFeed] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
+  const [posts, setPosts] = useState([]);
+  const [error, setError] = useState('');
 
   const handleClickOpen = (feed) => {
     setSelectedFeed(feed);
     setOpen(true);
-    setComments([
-      { id: 'user1', text: '멋진 사진이에요!' },
-      { id: 'user2', text: '이 장소에 가보고 싶네요!' },
-      { id: 'user3', text: '아름다운 풍경이네요!' },
-    ]); // 샘플 댓글 추가
-    setNewComment(''); // 댓글 입력 초기화
+    fetchComments(feed.post_id);
   };
 
   const handleClose = () => {
     setOpen(false);
     setSelectedFeed(null);
-    setComments([]); // 모달 닫을 때 댓글 초기화
+    setComments([]);
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (newComment.trim()) {
-      setComments([...comments, { id: 'currentUser', text: newComment }]); // 댓글 작성자 아이디 추가
-      setNewComment('');
+      try {
+        const response = await axios.post('http://localhost:3100/comments', {
+          post_id: selectedFeed.post_id,
+          user_id: currentUser.id,
+          content: newComment,
+        });
+        if (response.data.success) {
+          setNewComment('');
+          fetchComments(selectedFeed.post_id);
+        } else {
+          setError(response.data.message);
+        }
+      } catch (error) {
+        console.error('댓글 추가 실패:', error);
+        setError('댓글 추가에 실패했습니다.');
+      }
     }
   };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      const response = await axios.delete(`http://localhost:3100/comments/${commentId}`);
+      if (response.data.success) {
+        fetchComments(selectedFeed.post_id);
+      } else {
+        setError(response.data.message);
+      }
+    } catch (error) {
+      console.error('댓글 삭제 실패:', error);
+      setError('댓글 삭제에 실패했습니다.');
+    }
+  };
+
+  const fetchPosts = async () => {
+    try {
+      const response = await axios.get("http://localhost:3100/post/");
+      if (response.data.success) {
+        setPosts(response.data.posts);
+      } else {
+        setError('게시물 가져오기 실패: ' + response.data.message);
+      }
+    } catch (error) {
+      console.error('게시물 가져오기 중 오류:', error);
+      setError('게시물 가져오기 중 오류가 발생했습니다.');
+    }
+  };
+
+  const fetchComments = async (postId) => {
+    try {
+      const response = await axios.get(`http://localhost:3100/comments/${postId}`);
+      if (response.data.success) {
+        setComments(response.data.comments);
+      } else {
+        setError('댓글 가져오기 실패: ' + response.data.message);
+      }
+    } catch (error) {
+      console.error('댓글 가져오기 실패:', error);
+      setError('댓글 가져오기 중 오류가 발생했습니다.');
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   return (
     <Container maxWidth="md">
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6">SNS</Typography>
+          {currentUser && (
+            <>
+              <Typography variant="subtitle1" sx={{ marginLeft: 'auto' }}>
+                {currentUser.id}님 환영합니다!
+              </Typography>
+              <Button color="inherit" onClick={onLogout} sx={{ marginLeft: 2 }}>
+                로그아웃
+              </Button>
+            </>
+          )}
         </Toolbar>
       </AppBar>
 
       <Box mt={4}>
-        <Grid2 container spacing={3}>
-          {mockFeeds.map((feed) => (
-            <Grid2 xs={12} sm={6} md={4} key={feed.id}>
-              <Card>
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={feed.image}
-                  alt={feed.title}
-                  onClick={() => handleClickOpen(feed)}
-                  style={{ cursor: 'pointer' }}
-                />
-                <CardContent>
-                  <Typography variant="body2" color="textSecondary">
-                    {feed.title}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid2>
-          ))}
-        </Grid2>
+        {error && <Typography color="error">{error}</Typography>}
+        {posts.length > 0 ? (
+          posts.map((feed) => (
+            <Card key={feed.post_id} sx={{ mb: 2 }}>
+              <CardMedia
+                component="img"
+                sx={{
+                  height: 200,
+                  width: '100%',
+                  objectFit: 'cover',
+                }}
+                image={feed.image_url ? `http://localhost:3100/${feed.image_url}` : '/placeholder.png'}
+                alt={feed.content}
+                onClick={() => handleClickOpen(feed)}
+                style={{ cursor: 'pointer' }}
+              />
+              <CardContent>
+                <Typography variant="body2" color="textSecondary">
+                  {feed.content}
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                  작성자: {feed.user_id}
+                </Typography>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <Typography variant="body2" color="textSecondary">
+            게시물이 없습니다.
+          </Typography>
+        )}
       </Box>
 
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="lg"> {/* 모달 크기 조정 */}
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
         <DialogTitle>
-          {selectedFeed?.title}
-          <IconButton
-            edge="end"
-            color="inherit"
-            onClick={handleClose}
-            aria-label="close"
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-          >
+          {selectedFeed ? selectedFeed.content : '게시물'}
+          <IconButton edge="end" color="inherit" onClick={handleClose} aria-label="close" sx={{ position: 'absolute', right: 8, top: 8 }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ display: 'flex' }}>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="body1">{selectedFeed?.description}</Typography>
-            {selectedFeed?.image && (
-              <img
-                src={selectedFeed.image}
-                alt={selectedFeed.title}
-                style={{ width: '100%', marginTop: '10px' }}
-              />
+            <Typography variant="body1">{selectedFeed ? selectedFeed.description : ''}</Typography>
+            {selectedFeed?.image_url && (
+              <img src={`http://localhost:3100/${selectedFeed.image_url}`} alt={selectedFeed.content} style={{ width: '100%', marginTop: '10px' }} />
             )}
           </Box>
 
           <Box sx={{ width: '300px', marginLeft: '20px' }}>
             <Typography variant="h6">댓글</Typography>
             <List>
-              {comments.map((comment, index) => (
-                <ListItem key={index}>
+              {comments.map((comment) => (
+                <ListItem key={comment.id}>
                   <ListItemAvatar>
-                    <Avatar>{comment.id.charAt(0).toUpperCase()}</Avatar> {/* 아이디의 첫 글자를 아바타로 표시 */}
+                    <Avatar>{comment.user_id.charAt(0).toUpperCase()}</Avatar>
                   </ListItemAvatar>
-                  <ListItemText primary={comment.text} secondary={comment.id} /> {/* 아이디 표시 */}
+                  <ListItemText primary={comment.content} secondary={comment.user_id} />
+                  <ListItemSecondaryAction>
+                    <IconButton edge="end" onClick={() => handleDeleteComment(comment.id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </ListItemSecondaryAction>
                 </ListItem>
               ))}
             </List>
@@ -144,7 +186,7 @@ function Feed() {
               variant="outlined"
               fullWidth
               value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}           
+              onChange={(e) => setNewComment(e.target.value)}
             />
             <Button
               variant="contained"

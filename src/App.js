@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import { Box, CssBaseline } from '@mui/material';
 import Login from './components/Login';
@@ -9,22 +9,32 @@ import MyPage from './components/MyPage';
 import Menu from './components/Menu'; 
 
 function App() {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [posts, setPosts] = useState([]); // 게시물 상태 추가
   const location = useLocation();
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/join';
+  const isAuthPage = ['/login', '/join', '/'].includes(location.pathname);
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem("token");
+  };
+
+  const handlePostCreated = (newPost) => {
+    setPosts((prevPosts) => [...prevPosts, newPost]); // 새 게시물 추가
+  };
 
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
-      {!isAuthPage && <Menu />} {/* 로그인과 회원가입 페이지가 아닐 때만 Menu 렌더링 */}
+      {!isAuthPage && <Menu />}
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Routes>
-          <Route path="/" element={<Feed />} />
+          <Route path="/" element={<Login setCurrentUser={setCurrentUser} />} />
+          <Route path="/feed" element={<Feed currentUser={currentUser} posts={posts} onLogout={handleLogout} onPostCreated={handlePostCreated} />} />
           <Route path="/join" element={<Join />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/mypage" element={<MyPage />} />
-          {/* 추가적인 경로가 필요할 경우 여기에 추가 */}
-          <Route path="*" element={<Feed />} /> {/* 모든 잘못된 경로는 Feed로 리디렉션 */}
+          <Route path="/login" element={<Login setCurrentUser={setCurrentUser} />} />
+          <Route path="/register" element={<Register currentUser={currentUser} onPostCreated={handlePostCreated} />} />
+          <Route path="/mypage" element={<MyPage currentUser={currentUser} />} /> {/* currentUser prop 전달 */}
         </Routes>
       </Box>
     </Box>
