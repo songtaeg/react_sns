@@ -1,12 +1,7 @@
 import React from 'react';
 import {
-  TextField,
-  Button,
-  Container,
-  Typography,
-  Box,
-  IconButton,
-  Avatar,
+  TextField, Button, Container,
+  Typography, Box, IconButton, Avatar,
 } from '@mui/material';
 import { PhotoCamera } from '@mui/icons-material';
 import axios from 'axios';
@@ -14,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 function Register({ currentUser, onPostCreated }) {
   const [file, setFile] = React.useState(null);
+  const [title, setTitle] = React.useState(''); 
   const [content, setContent] = React.useState('');
   const navigate = useNavigate();
 
@@ -27,21 +23,29 @@ function Register({ currentUser, onPostCreated }) {
       return;
     }
 
-    if (!file) {
-      alert('첨부할 이미지를 선택해 주세요.');
+    if (!title) {
+      alert('제목을 적어주세요.');
+      return;
+    }
+
+    if (!content) {
+      alert('내용을 적어주세요.');
       return;
     }
 
     const formData = new FormData();
     formData.append('user_id', currentUser.id);
+    formData.append('title', title);
     formData.append('content', content);
-    formData.append('image_url', file);
+    if (file) {
+      formData.append('image_url', file);
+    }
 
     try {
       const response = await axios.post('http://localhost:3100/post/insert', formData);
       if (response.data.success) {
         alert('게시물이 등록되었습니다.');
-        onPostCreated(response.data.post); // 등록된 게시물 정보를 Feed에 전달
+        onPostCreated(response.data.post);
         navigate('/feed');
       } else {
         alert('게시물 등록에 실패했습니다: ' + response.data.message);
@@ -66,6 +70,15 @@ function Register({ currentUser, onPostCreated }) {
         <Typography variant="h4" gutterBottom>
           등록
         </Typography>
+
+        <TextField
+          label="제목"
+          value={title}
+          variant="outlined"
+          margin="normal"
+          fullWidth
+          onChange={(e) => setTitle(e.target.value)}
+        />
 
         <TextField
           label="내용"

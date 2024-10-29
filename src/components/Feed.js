@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   AppBar, Toolbar, Typography, Container, Box, Card, CardMedia, CardContent,
   Dialog, DialogTitle, DialogContent, IconButton,
-  DialogActions, Button, TextField,
-  List, ListItem, ListItemText, ListItemAvatar,
-  Avatar, ListItemSecondaryAction,
+  DialogActions, Button, TextField, List, ListItem, ListItemText, ListItemAvatar,
+  Avatar,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -28,12 +27,13 @@ function Feed({ currentUser, onLogout }) {
     setOpen(false);
     setSelectedFeed(null);
     setComments([]);
+    setError('');
   };
 
   const handleAddComment = async () => {
     if (newComment.trim()) {
       try {
-        const response = await axios.post('http://localhost:3100/comments', {
+        const response = await axios.post("http://localhost:3100/comments/insert", {
           post_id: selectedFeed.post_id,
           user_id: currentUser.id,
           content: newComment,
@@ -48,6 +48,8 @@ function Feed({ currentUser, onLogout }) {
         console.error('댓글 추가 실패:', error);
         setError('댓글 추가에 실패했습니다.');
       }
+    } else {
+      setError('댓글 내용을 입력하세요.');
     }
   };
 
@@ -134,7 +136,7 @@ function Feed({ currentUser, onLogout }) {
               />
               <CardContent>
                 <Typography variant="body2" color="textSecondary">
-                  {feed.content}
+                  {feed.title}
                 </Typography>
                 <Typography variant="caption" color="textSecondary">
                   작성자: {feed.user_id}
@@ -151,14 +153,14 @@ function Feed({ currentUser, onLogout }) {
 
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
         <DialogTitle>
-          {selectedFeed ? selectedFeed.content : '게시물'}
+          {selectedFeed ? selectedFeed.title : '게시물'}
           <IconButton edge="end" color="inherit" onClick={handleClose} aria-label="close" sx={{ position: 'absolute', right: 8, top: 8 }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ display: 'flex' }}>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="body1">{selectedFeed ? selectedFeed.description : ''}</Typography>
+            <Typography variant="body1">{selectedFeed ? selectedFeed.content : ''}</Typography>
             {selectedFeed?.image_url && (
               <img src={`http://localhost:3100/${selectedFeed.image_url}`} alt={selectedFeed.content} style={{ width: '100%', marginTop: '10px' }} />
             )}
@@ -173,11 +175,11 @@ function Feed({ currentUser, onLogout }) {
                     <Avatar>{comment.user_id.charAt(0).toUpperCase()}</Avatar>
                   </ListItemAvatar>
                   <ListItemText primary={comment.content} secondary={comment.user_id} />
-                  <ListItemSecondaryAction>
+                  {currentUser && currentUser.id === comment.user_id && (
                     <IconButton edge="end" onClick={() => handleDeleteComment(comment.id)}>
                       <DeleteIcon />
                     </IconButton>
-                  </ListItemSecondaryAction>
+                  )}
                 </ListItem>
               ))}
             </List>
@@ -187,6 +189,7 @@ function Feed({ currentUser, onLogout }) {
               fullWidth
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
             />
             <Button
               variant="contained"

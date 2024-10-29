@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import React, { useState, useCallback } from 'react';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { Box, CssBaseline } from '@mui/material';
 import Login from './components/Login';
 import Join from './components/Join'; 
@@ -10,18 +10,31 @@ import Menu from './components/Menu';
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [posts, setPosts] = useState([]); // 게시물 상태 추가
+  const [posts, setPosts] = useState([]);
   const location = useLocation();
+  const navigate = useNavigate();
   const isAuthPage = ['/login', '/join', '/'].includes(location.pathname);
 
   const handleLogout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem("token");
+    try {
+      setCurrentUser(null);
+      localStorage.removeItem("token");
+      navigate('/'); 
+    } catch (error) {
+      console.error("로그아웃 오류:", error);
+    }
   };
 
   const handlePostCreated = (newPost) => {
     setPosts((prevPosts) => [...prevPosts, newPost]); // 새 게시물 추가
   };
+
+  const handleUpdatePostsCount = useCallback(() => {
+    setCurrentUser((prevUser) => ({
+      ...prevUser,
+      posts: [...prevUser.posts],
+    }));
+  }, []);
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -34,7 +47,7 @@ function App() {
           <Route path="/join" element={<Join />} />
           <Route path="/login" element={<Login setCurrentUser={setCurrentUser} />} />
           <Route path="/register" element={<Register currentUser={currentUser} onPostCreated={handlePostCreated} />} />
-          <Route path="/mypage" element={<MyPage currentUser={currentUser} />} /> {/* currentUser prop 전달 */}
+          <Route path="/mypage" element={<MyPage currentUser={currentUser} onUpdatePostsCount={handleUpdatePostsCount} />} />
         </Routes>
       </Box>
     </Box>
