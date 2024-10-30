@@ -8,7 +8,7 @@ react 미니프로젝트
 ---
 🚀 사용 언어
 
-![React](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
+![React](https://img.shields.io/badge/React-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 ![JAVASCRIPT](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=JavaScript&logoColor=white)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS](https://img.shields.io/badge/CSS-239120?&style=for-the-badge&logo=css3&logoColor=white)
@@ -33,11 +33,12 @@ react 미니프로젝트
    + 제목,내용, 사진(선택사항) 등록 
      
 5. 마이페이지
-   + 본인 소개(구현 X)
+   + 본인 소개(구현 X) 디폴트
 
 ---
 데이터베이스(DB)
-[jsp프로젝트db-1.xlsx](https://github.com/user-attachments/files/16685074/jsp.db-1.xlsx)
+[reactsns_db.xlsx](https://github.com/user-attachments/files/17568152/reactsns_db.xlsx)
+
 
 ---
 📚 소감: 시간이 많이 없어서 구현하지 못 했던 기능도 있습니다. 그래도 열심히 하고 배운 점도 많았습니다.
