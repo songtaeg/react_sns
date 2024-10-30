@@ -3,7 +3,7 @@ import {
   AppBar, Toolbar, Typography, Container, Box, Card, CardMedia, CardContent,
   Dialog, DialogTitle, DialogContent, IconButton,
   DialogActions, Button, TextField, List, ListItem, ListItemText, ListItemAvatar,
-  Avatar,
+  Avatar, Grid2
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -67,6 +67,23 @@ function Feed({ currentUser, onLogout }) {
     }
   };
 
+  const handleDeletePost = async (postId) => {
+    if (window.confirm('정말로 이 게시물을 삭제하시겠습니까?')) {
+      try {
+        const response = await axios.delete(`http://localhost:3100/post/${postId}`);
+        if (response.data.success) {
+          setPosts(posts.filter(post => post.post_id !== postId)); // 로컬 상태에서 게시물 제거
+          handleClose(); // 다이얼로그 닫기
+        } else {
+          setError(response.data.message);
+        }
+      } catch (error) {
+        console.error('게시물 삭제 실패:', error);
+        setError('게시물 삭제에 실패했습니다.');
+      }
+    }
+  };
+
   const fetchPosts = async () => {
     try {
       const response = await axios.get("http://localhost:3100/post/");
@@ -119,36 +136,44 @@ function Feed({ currentUser, onLogout }) {
 
       <Box mt={4}>
         {error && <Typography color="error">{error}</Typography>}
-        {posts.length > 0 ? (
-          posts.map((feed) => (
-            <Card key={feed.post_id} sx={{ mb: 2 }}>
-              <CardMedia
-                component="img"
-                sx={{
-                  height: 200,
-                  width: '100%',
-                  objectFit: 'cover',
-                }}
-                image={feed.image_url ? `http://localhost:3100/${feed.image_url}` : '/placeholder.png'}
-                alt={feed.content}
-                onClick={() => handleClickOpen(feed)}
-                style={{ cursor: 'pointer' }}
-              />
-              <CardContent>
-                <Typography variant="body2" color="textSecondary">
-                  {feed.title}
-                </Typography>
-                <Typography variant="caption" color="textSecondary">
-                  작성자: {feed.user_id}
-                </Typography>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <Typography variant="body2" color="textSecondary">
-            게시물이 없습니다.
-          </Typography>
-        )}
+        <Grid2 container spacing={2}>
+          {posts.length > 0 ? (
+            posts.map((feed) => (
+              <Grid2 item xs={12} sm={6} md={4} key={feed.post_id}>
+                <Card sx={{ mb: 2 }}>
+                  <CardMedia
+                    component="img"
+                    sx={{
+                      height: 300,
+                      objectFit: 'cover',
+                    }}
+                    image={feed.image_url ? `http://localhost:3100/${feed.image_url}` : '/placeholder.png'}
+                    alt={feed.content}
+                    onClick={() => handleClickOpen(feed)}
+                    style={{ cursor: 'pointer' }}
+                  />
+                  <CardContent>
+                    <Typography variant="body2" color="textSecondary">
+                      {feed.title}
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary">
+                      작성자: {feed.user_id}
+                    </Typography>
+                    {currentUser && currentUser.id === feed.user_id && (
+                      <Button color="error" onClick={() => handleDeletePost(feed.post_id)}>
+                        삭제
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid2>
+            ))
+          ) : (
+            <Typography variant="body2" color="textSecondary">
+              게시물이 없습니다.
+            </Typography>
+          )}
+        </Grid2>
       </Box>
 
       <Dialog open={open} onClose={handleClose} fullWidth maxWidth="lg">
@@ -189,7 +214,7 @@ function Feed({ currentUser, onLogout }) {
               fullWidth
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
             />
             <Button
               variant="contained"

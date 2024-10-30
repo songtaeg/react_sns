@@ -15,6 +15,12 @@ function Join() {
 
   const handleIdCheck = async () => {
     setError('');
+
+    if (!id) {
+      setError('아이디를 입력하세요.');
+      return;
+    }
+
     try {
       const res = await axios.post("http://localhost:3100/user/check_id", { id });
       if (res.data.success) {
@@ -26,7 +32,7 @@ function Join() {
       }
     } catch (err) {
       console.error("아이디 중복 확인 오류 발생:", err);
-      setError('아이디 중복 확인 중 오류가 발생했습니다.');
+      setError(err.response?.data?.message || '아이디 중복 확인 중 오류가 발생했습니다.');
     }
   };
 
@@ -45,10 +51,7 @@ function Join() {
 
     try {
       const res = await axios.post("http://localhost:3100/user/insert", {
-        id,
-        name,
-        email,
-        password,
+        id, name, email, password,
       });
 
       if (res.data.success) {
@@ -59,38 +62,47 @@ function Join() {
       }
     } catch (err) {
       console.error("회원가입 오류 발생:", err);
-      setError('회원가입 중 오류가 발생했습니다.');
+      setError(err.response?.data?.message || '회원가입 중 오류가 발생했습니다.');
     }
   };
 
   return (
-    <Container maxWidth="xs">
+    <Container maxWidth="sm">
       <Box
         display="flex"
         flexDirection="column"
         alignItems="center"
         justifyContent="center"
         minHeight="100vh"
+        padding={2}
       >
         <Typography variant="h4" gutterBottom>
           회원가입
         </Typography>
-        <TextField
-          label="아이디"
-          variant="outlined"
-          margin="normal"
-          fullWidth
-          value={id}
-          onChange={(e) => setId(e.target.value)}
-        />
-        <Button
-          onClick={handleIdCheck}
-          variant="outlined"
-          color="primary"
-          style={{ marginTop: '10px', marginBottom: '10px' }}
-        >
-          아이디 중복 확인
-        </Button>
+
+        <Box display="flex" width="100%" alignItems="center">
+          <TextField
+            label="아이디"
+            variant="outlined"
+            margin="normal"
+            fullWidth
+            value={id}
+            onChange={(e) => setId(e.target.value)}
+          />
+          <Button
+            margin="normal"
+            onClick={handleIdCheck}
+            variant="outlined"
+            color="primary"
+            style={{ 
+              minWidth: '120px', // 버튼의 최소 너비 설정
+              height: '60px',    // 버튼 높이 설정
+            }}
+          >
+            중복 확인
+          </Button>
+        </Box>
+
         <TextField
           label="이름"
           variant="outlined"
@@ -126,15 +138,17 @@ function Join() {
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
         {error && <Typography color="error" style={{ marginTop: '10px' }}>{error}</Typography>}
+        
         <Button
           onClick={handleJoin}
           variant="contained"
           color="primary"
           fullWidth
-          style={{ marginTop: '20px' }}
+          style={{ marginTop: '20px', padding: '12px' }} // 패딩 조정
         >
           회원가입
         </Button>
+        
         <Typography variant="body2" style={{ marginTop: '10px' }}>
           이미 회원이라면? <Link to="/login">로그인</Link>
         </Typography>

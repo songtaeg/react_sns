@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Typography, Box, Avatar, Grid, Paper } from '@mui/material';
+import { Container, Typography, Box, Avatar, Paper } from '@mui/material';
 
 function MyPage({ currentUser }) {
   return (
@@ -25,22 +25,6 @@ function MyPage({ currentUser }) {
               @{currentUser?.id || 'honggildong'}
             </Typography>
           </Box>
-
-          {/* 통계 섹션 */}
-          <Grid container spacing={2} sx={{ marginTop: 2 }}>
-            <Grid item xs={4} textAlign="center">
-              <Typography variant="h6">팔로워</Typography>
-              <Typography variant="body1">{currentUser?.followers?.length || 0}</Typography> {/* 배열 길이로 팔로워 수 계산 */}
-            </Grid>
-            <Grid item xs={4} textAlign="center">
-              <Typography variant="h6">팔로잉</Typography>
-              <Typography variant="body1">{currentUser?.following?.length || 0}</Typography> {/* 배열 길이로 팔로잉 수 계산 */}
-            </Grid>
-            <Grid item xs={4} textAlign="center">
-              <Typography variant="h6">게시물</Typography>
-              <Typography variant="body1">{currentUser?.posts?.length || 0}</Typography> {/* 배열 길이로 게시물 수 계산 */}
-            </Grid>
-          </Grid>
 
           {/* 소개 섹션 */}
           <Box sx={{ marginTop: 3 }}>
